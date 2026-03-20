@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#D4537E"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="BMI น่ารัก"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <title>Health & BMI น่ารัก 🌸</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Noto Sans Thai', system-ui, sans-serif;
+      background: #fff0f5;
+      color: #72243E;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top bar */
+    .topbar {
+      background: linear-gradient(135deg, #D4537E, #ED93B1);
+      padding: env(safe-area-inset-top, 0) 0 0;
+    }
+    .topbar-inner {
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 2px;
+      padding: 14px 20px 16px;
+      text-align: center;
+    }
+    .topbar-emoji { font-size: 32px; line-height: 1; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: white; letter-spacing: 0.2px; }
+    .topbar-sub { font-size: 12px; color: rgba(255,255,255,0.85); }
+
+    /* Scroll */
+    .scroll {
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 14px 14px calc(env(safe-area-inset-bottom, 0px) + 28px);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    /* Card */
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      border: 1.5px solid #F4C0D1;
+      padding: 16px;
+    }
+    .card-pink { background: #FFF0F6; }
+    .card-title {
+      font-size: 11px; font-weight: 700; color: #D4537E;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+    }
+    .card-title span { font-size: 16px; }
+
+    /* Gender */
+    .gender-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .g-btn {
+      flex: 1; padding: 10px; border-radius: 14px;
+      border: 1.5px solid #F4C0D1; background: #fff;
+      color: #993556; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+      font-family: inherit; -webkit-tap-highlight-color: transparent;
+    }
+    .g-btn.active { background: #D4537E; border-color: #D4537E; color: #fff; }
+
+    /* Sliders */
+    .sl-wrap { margin-bottom: 18px; }
+    .sl-wrap:last-child { margin-bottom: 0; }
+    .sl-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .sl-name { font-size: 13px; color: #993556; font-weight: 500; }
+    .sl-val {
+      font-size: 15px; font-weight: 700; color: #72243E;
+      background: #fff; border: 1.5px solid #F4C0D1;
+      border-radius: 10px; padding: 2px 10px;
+    }
+    input[type=range] {
+      width: 100%; -webkit-appearance: none; height: 6px;
+      border-radius: 6px; background: #F4C0D1; outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%;
+      background: #D4537E; border: 3px solid #fff;
+      box-shadow: 0 1px 6px rgba(212,83,126,0.4);
+    }
+
+    /* Metrics */
+    .m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .m-cell {
+      background: #FFF0F6; border: 1.5px solid #F4C0D1;
+      border-radius: 16px; padding: 12px; text-align: center;
+    }
+    .m-emoji { font-size: 22px; margin-bottom: 4px; }
+    .m-label { font-size: 11px; color: #D4537E; margin-bottom: 4px; font-weight: 500; }
+    .m-val { font-size: 24px; font-weight: 700; color: #72243E; line-height: 1; }
+    .m-unit { font-size: 11px; color: #ED93B1; margin-top: 3px; }
+
+    /* BMI bar */
+    .bmi-bar {
+      height: 12px; border-radius: 12px; position: relative; margin: 14px 0 6px;
+      background: linear-gradient(to right, #85B7EB 0%, #97C459 28%, #FAC775 55%, #F09595 78%, #E24B4A 100%);
+    }
+    .bmi-thumb {
+      position: absolute; top: -7px; width: 26px; height: 26px;
+      border-radius: 50%; background: #fff; border: 3px solid #D4537E;
+      transform: translateX(-50%); transition: left 0.4s ease;
+      box-shadow: 0 1px 6px rgba(212,83,126,0.35);
+    }
+    .bmi-ticks { display: flex; justify-content: space-between; }
+    .bmi-ticks span { font-size: 10px; color: #ED93B1; }
+
+    /* Badge */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 16px; border-radius: 20px;
+      font-size: 13px; font-weight: 700; margin-top: 10px;
+    }
+
+    /* Chips */
+    .chips { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .chip {
+      flex: 1; min-width: 120px; background: #FFF0F6;
+      border: 1.5px solid #F4C0D1; border-radius: 14px;
+      padding: 10px; text-align: center;
+    }
+    .chip-label { font-size: 11px; color: #D4537E; margin-bottom: 2px; }
+    .chip-val { font-size: 14px; font-weight: 700; color: #72243E; }
+
+    /* Advice */
+    .advice {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: #FFF0F6; border: 1.5px solid #F4C0D1;
+      border-radius: 16px; padding: 14px;
+    }
+    .advice-icon { font-size: 30px; flex-shrink: 0; }
+    .advice-text { font-size: 13px; color: #72243E; line-height: 1.7; }
+
+    /* Deco */
+    .deco { text-align: center; font-size: 20px; padding: 4px 0 2px; letter-spacing: 6px; }
+
+    /* Install */
+    .install-bar {
+      background: #D4537E; color: white; border-radius: 16px;
+      padding: 12px 14px; display: none; align-items: center; gap: 10px;
+    }
+    .install-bar.show { display: flex; }
+    .install-bar p { flex: 1; font-size: 13px; line-height: 1.4; }
+    .install-bar button {
+      background: white; color: #D4537E; border: none; border-radius: 10px;
+      padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+      font-family: inherit;
+    }
+    .install-bar-x { background: none; border: none; color: rgba(255,255,255,0.7); font-size: 18px; cursor: pointer; }
+
+    /* iOS tip */
+    .ios-tip {
+      background: #FFF0F6; border: 1.5px solid #F4C0D1; border-radius: 14px;
+      padding: 12px 14px; font-size: 13px; color: #993556; line-height: 1.6; display: none;
+    }
+    .ios-tip.show { display: block; }
+    .ios-tip-x { float: right; background: none; border: none; color: #D4537E; font-size: 16px; cursor: pointer; }
+
+    .footer { text-align: center; font-size: 11px; color: #ED93B1; padding-top: 4px; }
+  </style>
+</head>
+<body>
+
+<div style="display:flex;flex-direction:column;min-height:100dvh">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-emoji">🌸</div>
+      <div class="topbar-title">Health & BMI น่ารัก</div>
+      <div class="topbar-sub">คำนวณสุขภาพสไตล์คิ้วท์ ๆ</div>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <div class="install-bar" id="installBar">
+      <p>ติดตั้งแอปน่ารักบนมือถือ 🌸</p>
+      <button id="installBtn">ติดตั้ง</button>
+      <button class="install-bar-x" onclick="document.getElementById('installBar').classList.remove('show')">✕</button>
+    </div>
+
+    <div class="ios-tip" id="iosTip">
+      <button class="ios-tip-x" onclick="this.parentElement.classList.remove('show')">✕</button>
+      ติดตั้งบน iPhone: กด <strong>Share</strong> แล้วเลือก <strong>"Add to Home Screen"</strong> นะคะ 🌸
+    </div>
+
+    <!-- Input -->
+    <div class="card card-pink">
+      <div class="card-title"><span>🎀</span> ข้อมูลส่วนตัว</div>
+      <div class="gender-row">
+        <button class="g-btn" id="gM" onclick="setG('M')">♂ ชาย</button>
+        <button class="g-btn active" id="gF" onclick="setG('F')">♀ หญิง</button>
+      </div>
+      <div class="sl-wrap">
+        <div class="sl-head"><span class="sl-name">อายุ</span><span class="sl-val" id="ageV">25 ปี</span></div>
+        <input type="range" min="10" max="90" step="1" value="25" id="age" oninput="upd()">
+      </div>
+      <div class="sl-wrap">
+        <div class="sl-head"><span class="sl-name">ส่วนสูง</span><span class="sl-val" id="htV">160 ซม.</span></div>
+        <input type="range" min="140" max="210" step="1" value="160" id="ht" oninput="upd()">
+      </div>
+      <div class="sl-wrap">
+        <div class="sl-head"><span class="sl-name">น้ำหนัก</span><span class="sl-val" id="wtV">52 กก.</span></div>
+        <input type="range" min="30" max="150" step="1" value="52" id="wt" oninput="upd()">
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+      <div class="card-title"><span>✨</span> ผลลัพธ์สุขภาพ</div>
+      <div class="m-grid">
+        <div class="m-cell">
+          <div class="m-emoji">💗</div>
+          <div class="m-label">ดัชนีมวลกาย BMI</div>
+          <div class="m-val" id="bmiV">—</div>
+          <div class="m-unit">kg/m²</div>
+        </div>
+        <div class="m-cell">
+          <div class="m-emoji">🔥</div>
+          <div class="m-label">แคลอรี่ต่อวัน</div>
+          <div class="m-val" id="tdeeV">—</div>
+          <div class="m-unit">kcal</div>
+        </div>
+        <div class="m-cell">
+          <div class="m-emoji">⭐</div>
+          <div class="m-label">น้ำหนักอุดมคติ</div>
+          <div class="m-val" id="ibwV">—</div>
+          <div class="m-unit">กก.</div>
+        </div>
+        <div class="m-cell">
+          <div class="m-emoji">📊</div>
+          <div class="m-label">ต้องลด / เพิ่ม</div>
+          <div class="m-val" id="diffV">—</div>
+          <div class="m-unit" id="diffU">กก.</div>
+        </div>
+      </div>
+
+      <div class="bmi-bar">
+        <div class="bmi-thumb" id="thumb" style="left:0%"></div>
+      </div>
+      <div class="bmi-ticks">
+        <span>ผอมเกิน</span><span>ปกติ</span><span>เกิน</span><span>อ้วน</span>
+      </div>
+      <div id="badge" class="badge"></div>
+
+      <div class="chips">
+        <div class="chip">
+          <div class="chip-label">ช่วงน้ำหนักปกติ</div>
+          <div class="chip-val" id="rangeV">—</div>
+        </div>
+        <div class="chip">
+          <div class="chip-label">BMR ขณะพักผ่อน</div>
+          <div class="chip-val" id="bmrV">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advice -->
+    <div class="advice" id="adviceBox">
+      <div class="advice-icon" id="advIcon">🌸</div>
+      <div class="advice-text" id="advText">กรอกข้อมูลเพื่อรับคำแนะนำสุขภาพน่ารักๆ นะคะ</div>
+    </div>
+
+    <div class="deco">🌷 💕 🌼 💖 🌸</div>
+    <div class="footer">ใช้เป็นแนวทางเท่านั้น ไม่ใช่คำแนะนำทางการแพทย์ค่ะ 💕</div>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+let gender = 'F';
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('installBar').classList.add('show');
+});
+document.getElementById('installBtn').onclick = async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installBar').classList.remove('show');
+};
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+if (isIOS && !isStandalone) document.getElementById('iosTip').classList.add('show');
+
+function setG(g) {
+  gender = g;
+  document.getElementById('gM').className = 'g-btn' + (g==='M' ? ' active' : '');
+  document.getElementById('gF').className = 'g-btn' + (g==='F' ? ' active' : '');
+  upd();
+}
+
+function upd() {
+  const age = +document.getElementById('age').value;
+  const h   = +document.getElementById('ht').value;
+  const w   = +document.getElementById('wt').value;
+  document.getElementById('ageV').textContent = age + ' ปี';
+  document.getElementById('htV').textContent  = h + ' ซม.';
+  document.getElementById('wtV').textContent  = w + ' กก.';
+
+  const hm  = h / 100;
+  const bmi = w / (hm * hm);
+  const bmr = gender === 'M'
+    ? 10*w + 6.25*h - 5*age + 5
+    : 10*w + 6.25*h - 5*age - 161;
+  const tdee    = Math.round(bmr * 1.375);
+  const ibwLow  = 18.5 * hm * hm;
+  const ibwHigh = 22.9 * hm * hm;
+  const ibwMid  = (ibwLow + ibwHigh) / 2;
+  const diff    = w - ibwMid;
+
+  document.getElementById('bmiV').textContent  = bmi.toFixed(1);
+  document.getElementById('tdeeV').textContent = tdee.toLocaleString();
+  document.getElementById('ibwV').textContent  = ibwMid.toFixed(1);
+  document.getElementById('diffV').textContent = Math.abs(diff).toFixed(1);
+  document.getElementById('diffU').textContent =
+    diff > 0.5  ? 'กก. เกิน' :
+    diff < -0.5 ? 'กก. น้อยกว่า' : 'กก. สมดุลแล้ว';
+  document.getElementById('rangeV').textContent = ibwLow.toFixed(1) + '–' + ibwHigh.toFixed(1) + ' กก.';
+  document.getElementById('bmrV').textContent   = Math.round(bmr).toLocaleString() + ' kcal';
+
+  const pct = Math.min(Math.max((bmi - 10) / 30, 0), 1) * 100;
+  document.getElementById('thumb').style.left = pct + '%';
+
+  let label, bg, color, icon, advice;
+  if (bmi < 18.5) {
+    label='ผอมเกินเกณฑ์'; bg='#E6F1FB'; color='#0C447C'; icon='🥺';
+    advice = 'BMI ' + bmi.toFixed(1) + ' — ผอมเกินไปนิดหน่อยนะคะ ลองเพิ่มมื้ออาหารและทานโปรตีนเพิ่มขึ้น เพื่อสร้างกล้ามเนื้อให้แข็งแรงขึ้นนะคะ 💙';
+  } else if (bmi < 23) {
+    label='น้ำหนักสมดุลดีมาก'; bg='#EAF3DE'; color='#27500A'; icon='🌟';
+    advice = 'BMI ' + bmi.toFixed(1) + ' — ยอดเยี่ยมมากเลย! น้ำหนักอยู่ในเกณฑ์ดีมากๆ รักษาสุขภาพแบบนี้ไว้นะคะ ออกกำลังกายสม่ำเสมอและกินอาหารครบ 5 หมู่ด้วยนะ 🌿';
+  } else if (bmi < 25) {
+    label='น้ำหนักเกินนิดหน่อย'; bg='#FAEEDA'; color='#633806'; icon='🍰';
+    advice = 'BMI ' + bmi.toFixed(1) + ' — ไม่เป็นไรนะคะ เกินนิดเดียวเอง ลองลดของหวานและเดินออกกำลังกายวันละ 30 นาที รับรองว่าจะกลับมาฟิตแน่นอนค่ะ 🌸';
+  } else if (bmi < 30) {
+    label='น้ำหนักเกินเกณฑ์'; bg='#FAECE7'; color='#712B13'; icon='💪';
+    advice = 'BMI ' + bmi.toFixed(1) + ' — ไม่ต้องเป็นกังวลนะคะ ค่อยๆ ปรับพฤติกรรมการกินและเพิ่มการออกกำลังกายทีละนิด อาจปรึกษาผู้เชี่ยวชาญด้านโภชนาการก็ดีค่ะ 🌼';
+  } else {
+    label='ควรดูแลสุขภาพด่วน'; bg='#FCEBEB'; color='#791F1F'; icon='🏥';
+    advice = 'BMI ' + bmi.toFixed(1) + ' — ควรพบแพทย์เพื่อวางแผนดูแลสุขภาพอย่างเหมาะสมนะคะ เพื่อสุขภาพที่ดีขึ้นในระยะยาวค่ะ 💕';
+  }
+
+  const bd = document.getElementById('badge');
+  bd.textContent = label; bd.style.background = bg; bd.style.color = color;
+  document.getElementById('advIcon').textContent = icon;
+  document.getElementById('advText').textContent = advice;
+}
+
+upd();
+</script>
+</body>
+</html>
